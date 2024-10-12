@@ -4,4 +4,4 @@
 
 #ls -d */ | grep "^[[:upper:]]"
 
-ls -l | grep "^d" |  grep "\<[[:upper:]][[:alpha:]]*$"
+ls -l | grep "^d" |  grep "\<[[:upper:]][[:alnum:]]*$"
