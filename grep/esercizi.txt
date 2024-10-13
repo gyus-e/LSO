@@ -1,3 +1,0 @@
-1. Elencare i file con permesso di esecuzione per il proprietario
-2. Elencare le directory il cui nome inizia per maiuscola
-3. Elencare i file con permesso di esecuzione oppure di scrittura per il gruppo di appartenenza
