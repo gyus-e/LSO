@@ -2,10 +2,12 @@
 
 #Scrivere uno script “eccho” che prende un argomento e lo stampa due volte
 
+arg=$*; 
+
 if [ -z "$*" ]
 then
 	echo "Inserire argomento.";
-	exit 1;
+	read arg;
 fi
 
-echo $1 $1
+echo $arg $arg;

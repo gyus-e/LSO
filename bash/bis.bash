@@ -2,13 +2,15 @@
 
 #Scrivere uno script “bis” che prende un comando come argomento e lo esegue due volte
 
+cmd=$*;
+
 if [ -z "$*" ]
 then
 	echo "Inserire un comando come argomento.";
-	exit 1;
+	read cmd;
 fi;
 
-$*;
+$cmd;
 
 if [ "$?" -ne 0 ]
 then 
@@ -18,4 +20,4 @@ fi;
 
 echo "";
 
-$*
+$cmd;
