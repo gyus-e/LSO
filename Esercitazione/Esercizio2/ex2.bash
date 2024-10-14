@@ -25,7 +25,7 @@ do
             mkdir output/$groupName/$userName
         fi
 
-        fileNames=$(ls -l $dir | awk -v userName=$userName '$3==userName {print $9}');
+        fileNames=$(ls -l $dir | awk -v userName=$userName -v groupName=$groupName '$3==userName && $4==groupName {print $9}');
         for fileName in $fileNames
         do
             #si usa grep per prendere solo i caratteri stampabili eliminando i caratteri speciali
