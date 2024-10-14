@@ -1,0 +1,3 @@
+hello foo pippo
+foo hello pluto
+paperino hello foo
