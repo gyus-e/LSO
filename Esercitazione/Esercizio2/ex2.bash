@@ -1,6 +1,6 @@
 #!/bin/bash
 
-dir=$1;
+dir=$1
 
 if [ ! -d "$dir" ]
 then 
@@ -25,8 +25,14 @@ do
             mkdir output/$groupName/$userName
         fi
 
-        fileName=$(ls -l $dir | awk -v userName=$userName '$3==userName {print $9}');
+        fileNames=$(ls -l $dir | awk -v userName=$userName '$3==userName {print $9}');
+        for fileName in $fileNames
+        do
+            #si usa grep per prendere solo i caratteri stampabili eliminando i caratteri speciali
+            oldPath=$(echo "$dir/$fileName" | grep [[:print:]]); 
+            newPath=$(echo "output/$groupName/$userName/$fileName" | grep [[:print:]]);
 
-        cp "$1/$fileName" "output/$groupName/$userName/$fileName"; #le variabili prendono caratteri speciali!
+            cp "$oldPath" "$newPath"; 
+        done
     done
 done
