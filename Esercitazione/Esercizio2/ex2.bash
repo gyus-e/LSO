@@ -8,7 +8,7 @@ then
     exit 1;
 fi
 
-groupNames=$(ls -l $dir | awk ' {print $4} ');
+groupNames=$(ls -l $dir | awk ' {print $4} ' | sort -u);
 
 for groupName in $groupNames
 do  
@@ -17,7 +17,7 @@ do
         mkdir output/$groupName
     fi
 
-    groupUsers=$(ls -l $dir | awk -v groupName=$groupName '$4==groupName {print $3}');
+    groupUsers=$(ls -l $dir | awk -v groupName=$groupName '$4==groupName {print $3}' | sort -u);
     for userName in $groupUsers
     do 
         if [ ! -d "output/$groupName/$userName" ]
@@ -25,7 +25,7 @@ do
             mkdir output/$groupName/$userName
         fi
 
-        fileNames=$(ls -l $dir | awk -v userName=$userName -v groupName=$groupName '$3==userName && $4==groupName {print $9}');
+        fileNames=$(ls -l $dir | awk -v userName=$userName -v groupName=$groupName '$3==userName && $4==groupName {print $9}' | sort -u);
         for fileName in $fileNames
         do
             #si usa grep per prendere solo i caratteri stampabili eliminando i caratteri speciali
