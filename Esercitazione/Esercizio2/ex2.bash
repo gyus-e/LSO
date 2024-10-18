@@ -1,6 +1,6 @@
 #!/bin/bash
 
-checkIfDirectoryExists () {
+checkDirectoryExists () {
     if [ ! -d "$1" ]
     then 
         echo "specified directory does not exist"; 
@@ -55,9 +55,24 @@ getFilesOfUserInGroupFromDirectory () {
     echo $fileNames;
 }
 
-cleanPath () {
-    path=$1;
-    echo "$path" | grep [[:print:]];
+getPrintable () {
+    echo "$@" | grep [[:print:]];
+}
+
+copyFileFromTo () {
+    sorucePath=$(getPrintable "$1");
+    targetPath=$(getPrintable "$2");
+    cp "$sorucePath" "$targetPath"; 
+}
+
+removeFile () {
+    filePath=$(getPrintable "$1");
+    rm "$filePath";
+}
+
+removeDirectory () {
+    directoryPath=$(getPrintable "$1");
+    rmdir "$directoryPath";
 }
 
 part1 () {
@@ -76,9 +91,7 @@ part1 () {
             fileNames=$(getFilesOfUserInGroupFromDirectory $userName $groupName $dir);
             for fileName in $fileNames
             do
-                sorucePath=$(cleanPath "$dir/$fileName");
-                targetPath=$(cleanPath "output/$groupName/$userName/$fileName");
-                cp "$sorucePath" "$targetPath"; 
+                copyFileFromTo "$dir/$fileName" "output/$groupName/$userName/$fileName";
             done
         done
     done
@@ -90,42 +103,36 @@ part2 () {
     groupNames=$(getGroupsFromDirectory $dir);
     for groupName in $groupNames 
     do 
-        howManyInGroupDirectory=$(countDirectoryEntries "output/$groupName");
-
         userNames=$(getUsersInGroupFromDirectory $groupName $dir);
         for userName in $userNames 
         do
-            howManyInUserDirectory=$(countDirectoryEntries "output/$groupName/$userName");
-
             fileNames=$(getFilesOfUserInGroupFromDirectory $userName $groupName $dir);
             for fileName in $fileNames 
-            do 
+            do
                 echo "Delete $groupName/$userName/$fileName? [Y/N]";
                 read fileIsToBeDeleted;
                 if [ $fileIsToBeDeleted == "Y" ] || [ $fileIsToBeDeleted == "y" ]
                 then
-                    rm "$(cleanPath "output/$groupName/$userName/$fileName")";
-                    ((howManyInUserDirectory--));
-                fi
-
-                if  [ $howManyInUserDirectory -eq 0 ]
-                then 
-                    rmdir "$(cleanPath "output/$groupName/$userName")";
-                    ((howManyInGroupDirectory--));
+                    removeFile "output/$groupName/$userName/$fileName";
                 fi
             done
+
+            if  [ $(checkDirectoryIsEmpty "output/$groupName/$userName") == "true" ]
+            then 
+                removeDirectory "output/$groupName/$userName";
+            fi
         done
             
-        if [ $howManyInGroupDirectory -eq 0 ]
+        if [ $(checkDirectoryIsEmpty "output/$groupName") == "true" ]
         then 
-            rmdir "$(cleanPath "output/$groupName")";
+            removeDirectory "output/$groupName";
         fi
     done
 }
 
 main () {
     dir=$1
-    checkIfDirectoryExists "$dir";
+    checkDirectoryExists "$dir";
 
     part1 $dir;
     part2 $dir;
