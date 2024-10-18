@@ -1,16 +1,17 @@
 #!/bin/bash
 
+true="true";
+
 checkDirectoryExists () {
-    if [ ! -d "$1" ]
+    if [[ -d "$1" ]]
     then 
-        echo "specified directory does not exist"; 
-        exit 1;
+        echo $true; 
     fi
 }
 
 makeDirectory () {
     dirName=$1;
-    if [ ! -d "$dirName" ]
+    if [[ $(checkDirectoryExists "$dirName") != $true ]]
     then
         mkdir $dirName;
     fi
@@ -18,17 +19,37 @@ makeDirectory () {
 
 countDirectoryEntries () {
     dir=$1;
-    directoryEntries=$(ls "$dir" | grep -c ".*");
-    echo $directoryEntries;
+    numberOfEntries=$(ls "$dir" | grep -c ".*");
+    echo $numberOfEntries;
 }
 
 checkDirectoryIsEmpty () {
     dir=$1;
-    directoryEntries=$(countDirectoryEntries $dir);
-    if [ $directoryEntries -eq 0 ]
+    numberOfEntries=$(countDirectoryEntries $dir);
+    if [[ $numberOfEntries -eq 0 ]]
     then 
         echo true;
     fi
+}
+
+getPrintable () {
+    echo "$@" | grep [[:print:]];
+}
+
+copyFileFromTo () {
+    sorucePath=$(getPrintable "$1");
+    targetPath=$(getPrintable "$2");
+    cp "$sorucePath" "$targetPath"; 
+}
+
+removeFile () {
+    filePath=$(getPrintable "$1");
+    rm "$filePath";
+}
+
+removeDirectory () {
+    directoryPath=$(getPrintable "$1");
+    rmdir "$directoryPath";
 }
 
 getGroupsFromDirectory () {
@@ -55,75 +76,83 @@ getFilesOfUserInGroupFromDirectory () {
     echo $fileNames;
 }
 
-getPrintable () {
-    echo "$@" | grep [[:print:]];
+copyFilesOfUserInGroupFromDirectory () {
+    userName=$1;
+    groupName=$2;
+    dir=$3;
+
+    fileNames=$(getFilesOfUserInGroupFromDirectory $userName $groupName $dir);
+    for fileName in $fileNames
+    do
+        copyFileFromTo "$dir/$fileName" "output/$groupName/$userName/$fileName";
+    done
 }
 
-copyFileFromTo () {
-    sorucePath=$(getPrintable "$1");
-    targetPath=$(getPrintable "$2");
-    cp "$sorucePath" "$targetPath"; 
+organizeGroupFromDirectory () {
+    groupName=$1;
+    dir=$2;
+
+    userNames=$(getUsersInGroupFromDirectory $groupName $dir);
+    for userName in $userNames
+    do
+        makeDirectory "output/$groupName/$userName";
+        copyFilesOfUserInGroupFromDirectory $userName $groupName $dir;
+    done
 }
 
-removeFile () {
-    filePath=$(getPrintable "$1");
-    rm "$filePath";
-}
-
-removeDirectory () {
-    directoryPath=$(getPrintable "$1");
-    rmdir "$directoryPath";
-}
-
-part1 () {
+organizeDirectoryByGroup () {
     dir=$1;
 
     groupNames=$(getGroupsFromDirectory $dir);
     for groupName in $groupNames
     do
         makeDirectory "output/$groupName";
-
-        userNames=$(getUsersInGroupFromDirectory $groupName $dir);
-        for userName in $userNames
-        do 
-            makeDirectory "output/$groupName/$userName";
-            
-            fileNames=$(getFilesOfUserInGroupFromDirectory $userName $groupName $dir);
-            for fileName in $fileNames
-            do
-                copyFileFromTo "$dir/$fileName" "output/$groupName/$userName/$fileName";
-            done
-        done
+        organizeGroupFromDirectory $groupName $dir;
     done
 }
 
-part2 () {
+selectiveRemoveFilesOfUserInGroupFromDirectory () {
+    userName=$1;
+    groupName=$2;
+    dir=$3;
+
+    fileNames=$(getFilesOfUserInGroupFromDirectory $userName $groupName $dir);
+    for fileName in $fileNames 
+    do
+        echo "Delete $groupName/$userName/$fileName? [Y/N]";
+        read fileIsToBeDeleted;
+        if [[ $fileIsToBeDeleted == "Y" ]] || [[ $fileIsToBeDeleted == "y" ]]
+        then
+            removeFile "output/$groupName/$userName/$fileName";
+        fi
+    done
+}
+
+selectiveRemoveFilesInGroupFromDirectory () {
+    groupName=$1;
+    dir=$2;
+    
+    userNames=$(getUsersInGroupFromDirectory $groupName $dir);
+    for userName in $userNames 
+    do
+        selectiveRemoveFilesOfUserInGroupFromDirectory $userName $groupName $dir
+
+        if  [[ $(checkDirectoryIsEmpty "output/$groupName/$userName") == "$true" ]]
+        then 
+            removeDirectory "output/$groupName/$userName";
+        fi
+    done
+}
+
+selectiveRemoveFilesFromOrganizedDirectory () {
     dir=$1;
 
     groupNames=$(getGroupsFromDirectory $dir);
     for groupName in $groupNames 
     do 
-        userNames=$(getUsersInGroupFromDirectory $groupName $dir);
-        for userName in $userNames 
-        do
-            fileNames=$(getFilesOfUserInGroupFromDirectory $userName $groupName $dir);
-            for fileName in $fileNames 
-            do
-                echo "Delete $groupName/$userName/$fileName? [Y/N]";
-                read fileIsToBeDeleted;
-                if [ $fileIsToBeDeleted == "Y" ] || [ $fileIsToBeDeleted == "y" ]
-                then
-                    removeFile "output/$groupName/$userName/$fileName";
-                fi
-            done
-
-            if  [ $(checkDirectoryIsEmpty "output/$groupName/$userName") == "true" ]
-            then 
-                removeDirectory "output/$groupName/$userName";
-            fi
-        done
-            
-        if [ $(checkDirectoryIsEmpty "output/$groupName") == "true" ]
+        selectiveRemoveFilesInGroupFromDirectory $groupName $dir;
+        
+        if [[ $(checkDirectoryIsEmpty "output/$groupName") == "$true" ]]
         then 
             removeDirectory "output/$groupName";
         fi
@@ -132,10 +161,14 @@ part2 () {
 
 main () {
     dir=$1
-    checkDirectoryExists "$dir";
-
-    part1 $dir;
-    part2 $dir;
+    if [[ $(checkDirectoryExists "$dir") == $true ]];
+    then
+        organizeDirectoryByGroup $dir;
+        selectiveRemoveFilesFromOrganizedDirectory $dir;
+    else 
+        echo "specified directory does not exist";
+        exit 1;
+    fi
 }
 
 main $@;
