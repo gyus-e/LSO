@@ -52,6 +52,15 @@ removeDirectory () {
     rmdir "$directoryPath";
 }
 
+
+removeDirectoryIfEmpty () {
+    dir=$1;
+    if [[ $(checkDirectoryIsEmpty "$1") == "$true" ]]
+    then 
+        removeDirectory "$dir";
+    fi
+}
+
 getGroupsFromDirectory () {
     dir=$1;
 
@@ -135,12 +144,8 @@ selectiveRemoveFilesInGroupFromDirectory () {
     userNames=$(getUsersInGroupFromDirectory $groupName $dir);
     for userName in $userNames 
     do
-        selectiveRemoveFilesOfUserInGroupFromDirectory $userName $groupName $dir
-
-        if  [[ $(checkDirectoryIsEmpty "output/$groupName/$userName") == "$true" ]]
-        then 
-            removeDirectory "output/$groupName/$userName";
-        fi
+        selectiveRemoveFilesOfUserInGroupFromDirectory $userName $groupName $dir;
+        removeDirectoryIfEmpty "output/$groupName/$userName";
     done
 }
 
@@ -151,11 +156,7 @@ selectiveRemoveFilesFromOrganizedDirectory () {
     for groupName in $groupNames 
     do 
         selectiveRemoveFilesInGroupFromDirectory $groupName $dir;
-        
-        if [[ $(checkDirectoryIsEmpty "output/$groupName") == "$true" ]]
-        then 
-            removeDirectory "output/$groupName";
-        fi
+        removeDirectoryIfEmpty "output/$groupName";
     done
 }
 
