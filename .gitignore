@@ -1,3 +1,4 @@
-Esercitazione/Esercizio2/dir
-Esercitazione/Esercizio2/output
-Esercitazione/Esercizio2/clean.bash
+Esercitazione/Esercizio2/*
+!Esercitazione/Esercizio2/ex2.bash
+Esercitazione/Esercizio4/*
+!Esercitazione/Esercizio4/visita.sh
